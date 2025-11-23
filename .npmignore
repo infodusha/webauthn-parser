@@ -2,3 +2,4 @@ src/
 tests/
 bun.lock
 tsconfig.json
+playwright.config.ts

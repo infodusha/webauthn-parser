@@ -31,7 +31,7 @@ bun install
 To test:
 
 ```bash
-bun test
+bun run test
 ```
 
 To build:

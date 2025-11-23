@@ -8,12 +8,15 @@
   "repository": "https://github.com/infodusha/webauthn-parser",
   "scripts": {
     "build": "tsc",
-    "test": "bun test"
+    "test": "bun run test:integration && bun run test:e2e",
+    "test:integration": "bun test ./tests/integration/*.test.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "cbor2": "^2.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@types/bun": "latest",
     "typescript": "~5.9.3"
   }

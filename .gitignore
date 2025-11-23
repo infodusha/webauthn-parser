@@ -1,3 +1,9 @@
 node_modules/
+
 dist/
 *.tsbuildinfo
+
+# Tests
+/test-results/
+/playwright/.cache/
+/playwright/.auth/
