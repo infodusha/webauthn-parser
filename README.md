@@ -20,6 +20,8 @@ const authenticatorDataResult = parseAuthenticatorData(authenticatorData);
 console.log(authenticatorDataResult);
 ```
 
+## Development
+
 To install dependencies:
 
 ```bash

@@ -4,9 +4,11 @@
   "workspaces": {
     "": {
       "name": "webauthn-parser",
+      "dependencies": {
+        "cbor2": "^2.0.1",
+      },
       "devDependencies": {
         "@types/bun": "latest",
-        "cbor2": "^2.0.1",
         "typescript": "~5.9.3",
       },
     },
