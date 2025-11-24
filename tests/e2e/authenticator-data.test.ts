@@ -26,106 +26,58 @@ test('authenticatorData', async ({ page }) => {
     },
   });
 
-  await page.evaluate(() => {
-    (window as any).__webauthnResult = null;
-    (window as any).__webauthnError = null;
-    (window as any).__credentialId = null;
-    (window as any).__publicKey = null;
-
-    const button = document.createElement('button');
-    button.id = 'webauthn-button';
-    button.textContent = 'Create';
-    document.body.appendChild(button);
-
-    button.addEventListener('click', async () => {
-      try {
-        const challenge = new Uint8Array(32);
-        crypto.getRandomValues(challenge);
-
-        const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions =
-          {
-            challenge,
-            rp: {
-              name: 'Test RP',
-              id: 'example.tld',
-            },
-            user: {
-              id: new Uint8Array([1, 2, 3, 4]),
-              name: 'test@example.tld',
-              displayName: 'Test User',
-            },
-            pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
-            authenticatorSelection: {
-              authenticatorAttachment: 'platform',
-              userVerification: 'preferred',
-            },
-          };
-
-        const credential = (await navigator.credentials.create({
-          publicKey: publicKeyCredentialCreationOptions,
-        })) as PublicKeyCredential;
-
-        const response =
-          credential.response as AuthenticatorAttestationResponse;
-        const authenticatorDataArrayBuffer = response.getAuthenticatorData();
-
-        (window as any).__credentialId = Array.from(
-          new Uint8Array(credential.rawId),
-        );
-
-        (window as any).__publicKey = Array.from(
-          new Uint8Array(response.getPublicKey() as ArrayBuffer),
-        );
-
-        (window as any).__webauthnResult = Array.from(
-          new Uint8Array(authenticatorDataArrayBuffer),
-        );
-      } catch (error) {
-        (window as any).__webauthnError = String(error);
-      }
-    });
-  });
-
-  await page.click('#webauthn-button');
-
-  await page.waitForFunction(
-    () =>
-      (window as any).__webauthnResult !== null ||
-      (window as any).__webauthnError !== null,
-  );
-
   const {
     authenticatorData,
     credentialId,
     publicKey: publicKeyArray,
-  } = await page.evaluate(() => {
-    if ((window as any).__webauthnError) {
-      throw new Error((window as any).__webauthnError);
-    }
+  } = await page.evaluate(async () => {
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+
+    const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions =
+      {
+        challenge,
+        rp: {
+          name: 'Test RP',
+          id: 'example.tld',
+        },
+        user: {
+          id: new Uint8Array([1, 2, 3, 4]),
+          name: 'test@example.tld',
+          displayName: 'Test User',
+        },
+        pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          userVerification: 'preferred',
+        },
+      };
+
+    const credential = (await navigator.credentials.create({
+      publicKey: publicKeyCredentialCreationOptions,
+    })) as PublicKeyCredential;
+
+    const response = credential.response as AuthenticatorAttestationResponse;
+    const authenticatorDataArrayBuffer = response.getAuthenticatorData();
+
     return {
-      authenticatorData: (window as any).__webauthnResult as number[],
-      credentialId: (window as any).__credentialId as number[],
-      publicKey: (window as any).__publicKey as number[],
+      authenticatorData: new Uint8Array(authenticatorDataArrayBuffer),
+      credentialId: new Uint8Array(credential.rawId),
+      publicKey: new Uint8Array(response.getPublicKey() as ArrayBuffer),
     };
   });
 
-  const authenticatorDataUint8 = new Uint8Array(authenticatorData);
-  const parsedAuthenticatorData = parseAuthenticatorData(
-    authenticatorDataUint8,
-  );
+  const parsedAuthenticatorData = parseAuthenticatorData(authenticatorData);
 
-  const expectedCredentialId = new Uint8Array(credentialId);
   expect(parsedAuthenticatorData.attestedCredentialData?.credentialId).toEqual(
-    expectedCredentialId,
+    credentialId,
   );
 
-  const publicKeyFromResponseDER = new Uint8Array(publicKeyArray);
   const publicKeyFromParser =
     parsedAuthenticatorData.attestedCredentialData?.publicKey;
 
-  const publicKeyFromResponse = await extractPublicKeyPointFromDER(
-    publicKeyFromResponseDER,
-  );
+  const publicKeyFromResponse =
+    await extractPublicKeyPointFromDER(publicKeyArray);
 
   expect(publicKeyFromParser).toEqual(publicKeyFromResponse);
 

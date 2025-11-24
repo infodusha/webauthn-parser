@@ -28,72 +28,39 @@ test('clientData', async ({ page }) => {
   const challenge = new Uint8Array(32);
   crypto.getRandomValues(challenge);
 
-  await page.evaluate(
-    ([challenge]) => {
-      (window as any).__webauthnResult = null;
-      (window as any).__webauthnError = null;
+  const clientDataJSON = await page.evaluate(
+    async ([challenge]) => {
+      const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions =
+        {
+          challenge,
+          rp: {
+            name: 'Test RP',
+            id: 'example.tld',
+          },
+          user: {
+            id: new Uint8Array([1, 2, 3, 4]),
+            name: 'test@example.com',
+            displayName: 'Test User',
+          },
+          pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
+          authenticatorSelection: {
+            authenticatorAttachment: 'platform',
+            userVerification: 'preferred',
+          },
+        };
 
-      const button = document.createElement('button');
-      button.id = 'webauthn-button';
-      button.textContent = 'Create';
-      document.body.appendChild(button);
+      const credential = (await navigator.credentials.create({
+        publicKey: publicKeyCredentialCreationOptions,
+      })) as PublicKeyCredential;
 
-      button.addEventListener('click', async () => {
-        try {
-          const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions =
-            {
-              challenge,
-              rp: {
-                name: 'Test RP',
-                id: 'example.tld',
-              },
-              user: {
-                id: new Uint8Array([1, 2, 3, 4]),
-                name: 'test@example.com',
-                displayName: 'Test User',
-              },
-              pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
-              authenticatorSelection: {
-                authenticatorAttachment: 'platform',
-                userVerification: 'preferred',
-              },
-            };
-
-          const credential = (await navigator.credentials.create({
-            publicKey: publicKeyCredentialCreationOptions,
-          })) as PublicKeyCredential;
-
-          const response =
-            credential.response as AuthenticatorAttestationResponse;
-          const clientDataJSONArrayBuffer = response.clientDataJSON;
-          (window as any).__webauthnResult = Array.from(
-            new Uint8Array(clientDataJSONArrayBuffer),
-          );
-        } catch (error) {
-          (window as any).__webauthnError = String(error);
-        }
-      });
+      const response = credential.response as AuthenticatorAttestationResponse;
+      const clientDataJSONArrayBuffer = response.clientDataJSON;
+      return new Uint8Array(clientDataJSONArrayBuffer);
     },
     [challenge],
   );
 
-  await page.click('#webauthn-button');
-
-  await page.waitForFunction(
-    () =>
-      (window as any).__webauthnResult !== null ||
-      (window as any).__webauthnError !== null,
-  );
-
-  const clientDataJSON = await page.evaluate(() => {
-    if ((window as any).__webauthnError) {
-      throw new Error((window as any).__webauthnError);
-    }
-    return (window as any).__webauthnResult as number[];
-  });
-
-  const clientDataJSONUint8 = new Uint8Array(clientDataJSON);
-  const parsedClientData = parseClient(clientDataJSONUint8);
+  const parsedClientData = parseClient(clientDataJSON);
 
   expect(parsedClientData.type).toBe('webauthn.create');
   expect(parsedClientData.origin).toBe('https://example.tld');
