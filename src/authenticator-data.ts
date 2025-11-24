@@ -1,4 +1,4 @@
-import { convertCOSEtoPKCS } from './cose.js';
+import { type COSEALG, convertCOSEtoPKCS } from './cose.js';
 import { toHex } from './utils.js';
 
 export interface AuthenticatorDataResult {
@@ -22,6 +22,7 @@ export interface AttestedCredentialData {
   aaguid: string;
   credentialId: Uint8Array;
   publicKey: Uint8Array;
+  publicKeyAlgorithm: COSEALG;
 }
 
 export function parseAuthenticatorData(
@@ -71,10 +72,13 @@ function extractSignCount(data: Uint8Array) {
 function extractAttested(data: Uint8Array): AttestedCredentialData {
   const credentialId = extractCredentialId(data);
 
+  const pk = extractPublicKey(data, credentialId.byteLength);
+
   return {
     aaguid: extractAaguid(data),
     credentialId,
-    publicKey: extractPublicKey(data, credentialId.byteLength),
+    publicKey: pk.data,
+    publicKeyAlgorithm: pk.alg,
   };
 }
 

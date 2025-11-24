@@ -5,7 +5,7 @@ import { decode as cborDecode } from 'cbor2';
  *
  * https://www.iana.org/assignments/cose/cose.xhtml#algorithms
  */
-enum COSEALG {
+export enum COSEALG {
   ES256 = -7,
   EdDSA = -8,
   ES384 = -35,
@@ -67,7 +67,7 @@ type COSEPublicKeyEC2 = COSEPublicKey & {
 
 const TAG = 0x04;
 
-export function convertCOSEtoPKCS(cosePublicKey: Uint8Array): Uint8Array {
+export function convertCOSEtoPKCS(cosePublicKey: Uint8Array) {
   const struct = cborDecode<COSEPublicKeyEC2>(cosePublicKey);
 
   const keyType = struct.get(COSEKEYS.kty);
@@ -83,9 +83,11 @@ export function convertCOSEtoPKCS(cosePublicKey: Uint8Array): Uint8Array {
     throw new Error('COSE public key was missing x');
   }
 
-  if (y) {
-    return new Uint8Array([TAG, ...x, ...y]);
-  }
+  const data = new Uint8Array(y ? [TAG, ...x, ...y] : [TAG, ...x]);
+  const alg = struct.get(COSEKEYS.alg) as COSEALG;
 
-  return new Uint8Array([TAG, ...x]);
+  return {
+    data,
+    alg,
+  };
 }
