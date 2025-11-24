@@ -1,4 +1,3 @@
-import { createPublicKey } from 'node:crypto';
 import { expect, test } from '@playwright/test';
 import { parseAuthenticatorData } from '../../src/index.js';
 import { fromBase64Url } from '../../src/utils.js';
@@ -124,7 +123,7 @@ test('authenticatorData', async ({ page }) => {
   const publicKeyFromParser =
     parsedAuthenticatorData.attestedCredentialData?.publicKey;
 
-  const publicKeyFromResponse = extractPublicKeyPointFromDER(
+  const publicKeyFromResponse = await extractPublicKeyPointFromDER(
     publicKeyFromResponseDER,
   );
 
@@ -155,14 +154,21 @@ async function sha256(value: string): Promise<Uint8Array> {
   return new Uint8Array(hashBuffer);
 }
 
-function extractPublicKeyPointFromDER(der: Uint8Array): Uint8Array {
-  const keyObject = createPublicKey({
-    key: Buffer.from(der),
-    format: 'der',
-    type: 'spki',
-  });
+async function extractPublicKeyPointFromDER(
+  der: Uint8Array,
+): Promise<Uint8Array> {
+  const cryptoKey = await crypto.subtle.importKey(
+    'spki',
+    der.slice().buffer,
+    {
+      name: 'ECDSA',
+      namedCurve: 'P-256',
+    },
+    true,
+    ['verify'],
+  );
 
-  const jwk = keyObject.export({ format: 'jwk' });
+  const jwk = await crypto.subtle.exportKey('jwk', cryptoKey);
 
   if (!jwk.x || !jwk.y) {
     throw new Error('Invalid EC public key: missing x or y coordinates');
