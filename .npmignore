@@ -1,5 +1,7 @@
 src/
 tests/
+test-results/
 bun.lock
 tsconfig.json
 playwright.config.ts
+biome.json
