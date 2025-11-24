@@ -1,11 +1,11 @@
-import { decode as cborDecode } from "cbor2";
+import { decode as cborDecode } from 'cbor2';
 
 /**
  * COSE Algorithms
  *
  * https://www.iana.org/assignments/cose/cose.xhtml#algorithms
  */
-const enum COSEALG {
+enum COSEALG {
   ES256 = -7,
   EdDSA = -8,
   ES384 = -35,
@@ -25,7 +25,7 @@ const enum COSEALG {
  *
  * https://www.iana.org/assignments/cose/cose.xhtml#key-type
  */
-const enum COSEKTY {
+enum COSEKTY {
   OKP = 1,
   EC2 = 2,
   RSA = 3,
@@ -37,7 +37,7 @@ const enum COSEKTY {
  * https://www.iana.org/assignments/cose/cose.xhtml#key-common-parameters
  * https://www.iana.org/assignments/cose/cose.xhtml#key-type-parameters
  */
-const enum COSEKEYS {
+enum COSEKEYS {
   kty = 1,
   alg = 3,
   crv = -1,
@@ -73,14 +73,14 @@ export function convertCOSEtoPKCS(cosePublicKey: Uint8Array): Uint8Array {
   const keyType = struct.get(COSEKEYS.kty);
 
   if (keyType !== COSEKTY.EC2) {
-    throw new Error("COSE public key was not an EC2 key");
+    throw new Error('COSE public key was not an EC2 key');
   }
 
   const x = struct.get(COSEKEYS.x);
   const y = struct.get(COSEKEYS.y);
 
   if (!x) {
-    throw new Error("COSE public key was missing x");
+    throw new Error('COSE public key was missing x');
   }
 
   if (y) {

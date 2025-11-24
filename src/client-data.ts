@@ -1,8 +1,8 @@
-import { fromBase64Url } from "./utils.js";
+import { fromBase64Url } from './utils.js';
 
-const utf8Decoder = new TextDecoder("utf-8");
+const utf8Decoder = new TextDecoder('utf-8');
 
-export type ClientDataType = "webauthn.create" | "webauthn.get" | (string & {});
+export type ClientDataType = 'webauthn.create' | 'webauthn.get' | (string & {});
 
 export interface CollectedClientData {
   type: ClientDataType;

@@ -1,5 +1,5 @@
-import { convertCOSEtoPKCS } from "./cose.js";
-import { toHex } from "./utils.js";
+import { convertCOSEtoPKCS } from './cose.js';
+import { toHex } from './utils.js';
 
 export interface AuthenticatorDataResult {
   /** SHA-256 hash of the RP ID the credential is scoped to. */
@@ -25,7 +25,7 @@ export interface AttestedCredentialData {
 }
 
 export function parseAuthenticatorData(
-  authenticatorData: Uint8Array
+  authenticatorData: Uint8Array,
 ): AuthenticatorDataResult {
   // https://w3c.github.io/webauthn/#sctn-authenticator-data
 
@@ -83,20 +83,20 @@ function extractAaguid(data: Uint8Array) {
 
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(
     12,
-    16
+    16,
   )}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
 }
 
 function extractCredentialId(data: Uint8Array) {
   const length = new DataView(data.buffer.slice(0x35, 0x37)).getUint16(
     0,
-    false
+    false,
   );
   return new Uint8Array(data.buffer.slice(0x37, 0x37 + length));
 }
 
 function extractPublicKey(data: Uint8Array, credentialIdLength: number) {
   return convertCOSEtoPKCS(
-    new Uint8Array(data.buffer.slice(0x37 + credentialIdLength))
+    new Uint8Array(data.buffer.slice(0x37 + credentialIdLength)),
   );
 }

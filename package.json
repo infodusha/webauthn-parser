@@ -10,12 +10,14 @@
     "build": "tsc",
     "test": "bun run test:integration && bun run test:e2e",
     "test:integration": "bun test ./tests/integration/*.test.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "check": "biome check ."
   },
   "dependencies": {
     "cbor2": "^2.0.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.3.7",
     "@playwright/test": "^1.56.1",
     "@types/bun": "latest",
     "typescript": "~5.9.3"
